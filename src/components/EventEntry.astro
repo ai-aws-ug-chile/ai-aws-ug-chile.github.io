@@ -1,0 +1,81 @@
+---
+import { Image } from 'astro:assets';
+import type { Event } from '../lib/events';
+import { formatStamp, formatTimeRange, toISODate } from '../lib/format';
+import { getEventPhotos } from '../lib/photos';
+import { url } from '../config';
+
+interface Props {
+  event: Event;
+}
+
+const { event } = Astro.props;
+const { data } = event;
+
+const href = url(`/eventos/${event.id}`);
+
+const photoCount = getEventPhotos(event).length;
+const talkCount = data.talks.length;
+const slideCount = data.talks.filter((talk) => talk.slidesUrl).length;
+const hasVideo = data.talks.some((talk) => talk.videoUrl) || Boolean(data.recordingUrl);
+
+/*
+ * A bare "2 presentaciones" next to "3 charlas" reads as if the event had two
+ * talks. The fraction says what it means: two of the three decks are up, one is
+ * still pending. Once they are all in, the fraction stops earning its keep.
+ */
+const slidesLabel =
+  slideCount === 0
+    ? null
+    : slideCount === talkCount
+      ? `${slideCount} ${slideCount === 1 ? 'presentación' : 'presentaciones'}`
+      : `${slideCount}/${talkCount} presentaciones`;
+
+const assets = [
+  talkCount > 0 && `${talkCount} ${talkCount === 1 ? 'charla' : 'charlas'}`,
+  slidesLabel,
+  photoCount > 0 && `${photoCount} ${photoCount === 1 ? 'foto' : 'fotos'}`,
+  hasVideo && 'video',
+].filter(Boolean) as string[];
+---
+
+<article class="entry grid gap-x-10 gap-y-3 sm:grid-cols-[9.5rem_1fr]">
+  <div class="label text-night-500 space-y-1.5">
+    <p><time datetime={toISODate(data.date)}>{formatStamp(data.date)}</time></p>
+    <p>{formatTimeRange(data.date, data.endDate)}</p>
+    {data.venue && <p class="tracking-normal normal-case">{data.venue}</p>}
+  </div>
+
+  <div>
+    <h3 class="text-2xl leading-[1.15] font-bold tracking-tight sm:text-[1.75rem]">
+      <a href={href} class="link-title">{data.title}</a>
+    </h3>
+
+    <p class="text-night-600 dark:text-cream-300 mt-3 max-w-2xl leading-relaxed">
+      {data.summary}
+    </p>
+
+    {
+      data.cover && (
+        <a href={href} tabindex="-1" aria-hidden="true" class="mt-5 block">
+          <Image
+            src={data.cover}
+            alt={data.coverAlt ?? ''}
+            width={900}
+            height={500}
+            class="aspect-video w-full object-cover"
+            loading="lazy"
+          />
+        </a>
+      )
+    }
+
+    {assets.length > 0 && <p class="label text-night-500 mt-4">{assets.join(' · ')}</p>}
+
+    <p class="mt-4">
+      <a href={href} class="label text-brand-700 dark:text-brand-400 hover:underline">
+        Ver detalles <span aria-hidden="true">→</span>
+      </a>
+    </p>
+  </div>
+</article>

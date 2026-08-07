@@ -1,0 +1,100 @@
+---
+import type { Event } from '../lib/events';
+import { isExternal, link } from '../config';
+
+interface Props {
+  talks: Event['data']['talks'];
+}
+
+const { talks } = Astro.props;
+
+// Read from introductory to advanced: 100 → 400. Sort is stable, so talks
+// sharing a level keep their frontmatter order, and talks with no level fall
+// to the end rather than jumping to the front.
+const ordered = [...talks].sort((a, b) => (a.level ?? Infinity) - (b.level ?? Infinity));
+
+type Talk = Props['talks'][number];
+
+const affiliation = (talk: Talk): string | undefined =>
+  talk.role && talk.company
+    ? `${talk.role} en ${talk.company}`
+    : (talk.role ?? talk.company);
+
+// AWS session levels. The number alone means nothing to newcomers, so the
+// label carries the word and the number explains it to those who know it.
+const LEVELS: Record<number, { label: string; hint: string }> = {
+  100: { label: 'Introductorio', hint: 'No necesitas experiencia previa' },
+  200: { label: 'Intermedio', hint: 'Asume familiaridad con el tema' },
+  300: { label: 'Avanzado', hint: 'Entra en detalle técnico' },
+  400: { label: 'Experto', hint: 'Para quienes trabajan con esto a diario' },
+};
+---
+
+{
+  /* The first entry drops its rule: this list sits directly under the tab bar,
+    whose bottom border already separates it. */
+}
+<ol class="[&>li:first-child]:border-t-0 [&>li:first-child]:pt-0">
+  {
+    ordered.map((talk, index) => (
+      <li class="entry grid gap-x-10 gap-y-3 sm:grid-cols-[9.5rem_1fr]">
+        <div class="label text-night-500 space-y-1.5">
+          <p aria-hidden="true">{String(index + 1).padStart(2, '0')}</p>
+          {talk.level && LEVELS[talk.level] && (
+            <p title={LEVELS[talk.level].hint} class="text-brand-700 dark:text-brand-400">
+              Nivel {talk.level}
+              <span class="block tracking-normal normal-case">
+                {LEVELS[talk.level].label}
+              </span>
+            </p>
+          )}
+        </div>
+
+        <div>
+          <h3 class="text-xl leading-snug font-bold tracking-tight sm:text-2xl">
+            {talk.title}
+          </h3>
+
+          <p class="text-night-600 dark:text-cream-300 mt-2">
+            <span class="text-night-900 dark:text-cream-50 font-semibold">
+              {talk.speaker}
+            </span>
+            {affiliation(talk) && <span> — {affiliation(talk)}</span>}
+          </p>
+
+          {talk.abstract && (
+            <p class="text-night-600 dark:text-cream-300 mt-3 max-w-2xl leading-relaxed">
+              {talk.abstract}
+            </p>
+          )}
+
+          {(talk.slidesUrl || talk.videoUrl) && (
+            <p class="mt-4 flex flex-wrap gap-x-7 gap-y-2">
+              {talk.slidesUrl && (
+                <a
+                  href={link(talk.slidesUrl)}
+                  target="_blank"
+                  rel={isExternal(talk.slidesUrl) ? 'noopener noreferrer' : undefined}
+                  class="label text-brand-700 dark:text-brand-400 hover:underline"
+                >
+                  Presentación{!isExternal(talk.slidesUrl) && ' (PDF)'}
+                  <span aria-hidden="true"> ↓</span>
+                </a>
+              )}
+              {talk.videoUrl && (
+                <a
+                  href={link(talk.videoUrl)}
+                  target="_blank"
+                  rel={isExternal(talk.videoUrl) ? 'noopener noreferrer' : undefined}
+                  class="label text-brand-700 dark:text-brand-400 hover:underline"
+                >
+                  Video <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </p>
+          )}
+        </div>
+      </li>
+    ))
+  }
+</ol>

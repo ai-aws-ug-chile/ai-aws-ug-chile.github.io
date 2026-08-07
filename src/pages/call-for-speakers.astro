@@ -1,0 +1,192 @@
+---
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SocialLinks from '../components/SocialLinks.astro';
+import { CONTACT, SITE } from '../config';
+
+// The placeholder id ships with the repo; until it is replaced we show setup
+// instructions instead of an embed that would just render a Google 404.
+const formConfigured = !CONTACT.speakerFormEmbedUrl.includes('REPLACE_WITH_YOUR_FORM_ID');
+
+// What we are actually looking for, so nobody rules themselves out before asking.
+const speakerNotes = [
+  {
+    icon: 'lucide:clock',
+    title: 'De 10 o de 40 minutos',
+    body: 'Una lightning talk de cinco minutos también cuenta. No hace falta llenar una hora.',
+  },
+  {
+    icon: 'lucide:wrench',
+    title: 'Algo que construiste',
+    body: 'Un proyecto real, una herramienta que probaste, algo que falló y por qué. No tiene que ser espectacular.',
+  },
+  {
+    icon: 'lucide:sprout',
+    title: 'Primera vez, bienvenida',
+    body: 'Si nunca has presentado, te ayudamos a armar la propuesta y a ensayarla antes.',
+  },
+  {
+    icon: 'lucide:map-pin',
+    title: 'Desde cualquier región',
+    body: 'No hace falta estar en Santiago. Si estás en otra ciudad, coordinamos una sesión online o te sumamos a un encuentro híbrido.',
+  },
+];
+
+// Everything that is not a talk proposal — these go to the inbox, not the form.
+const otherReasons = [
+  'Pueden prestarnos una sala, en cualquier ciudad del país',
+  'Quieren ayudar a organizar',
+  'Quieren armar un encuentro en su región',
+  'Tienen una idea de tema para un próximo encuentro',
+  'Cualquier otra duda',
+];
+---
+
+<BaseLayout
+  title="Contacto"
+  description="Propón una charla para un próximo encuentro de AI AWS UG Chile, o escríbenos para cualquier otra cosa."
+>
+  <PageHeader
+    eyebrow="Participa"
+    title="¿Quieres presentar una charla?"
+    lead="Recibimos propuestas todo el año. Si construiste algo con IA sobre AWS y aprendiste algo en el proceso, eso le sirve a alguien más."
+  >
+    {
+      CONTACT.email && (
+        <p class="text-night-600 dark:text-cream-300 mt-6">
+          ¿Buscabas otra cosa? Escríbenos a{' '}
+          <a href={`mailto:${CONTACT.email}`} class="link-underline font-semibold">
+            {CONTACT.email}
+          </a>
+          .
+        </p>
+      )
+    }
+  </PageHeader>
+
+  <section class="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
+    <div class="grid gap-12 lg:grid-cols-5">
+      {/* ── Call for speakers ────────────────────────────────────────────── */}
+      <div class="lg:col-span-3">
+        <h2 class="text-2xl font-bold tracking-tight">Propón tu charla</h2>
+        <p class="text-night-600 dark:text-cream-300 mt-3">
+          Cuéntanos de qué se trata y te respondemos por correo. Normalmente contestamos
+          dentro de la semana.
+        </p>
+
+        {
+          formConfigured ? (
+            <div class="mt-8 overflow-hidden">
+              <iframe
+                src={CONTACT.speakerFormEmbedUrl}
+                title="Formulario para proponer una charla en AI AWS UG Chile"
+                height={CONTACT.speakerFormHeight}
+                class="w-full border-0"
+                loading="lazy"
+              >
+                Cargando formulario…
+              </iframe>
+            </div>
+          ) : (
+            <div class="rule mt-8 pt-6">
+              <p class="font-bold">Falta conectar el formulario</p>
+              <p class="text-night-600 dark:text-cream-300 mt-2 text-sm leading-relaxed">
+                Para activarlo: creen el Google Form, abran{' '}
+                <span class="font-medium">Enviar → &lt;&gt; (insertar HTML)</span>, copien
+                la URL del{' '}
+                <code class="bg-cream-100 dark:bg-night-700 rounded px-1 py-0.5 text-xs">
+                  src
+                </code>{' '}
+                y péguenla en{' '}
+                <code class="bg-cream-100 dark:bg-night-700 rounded px-1 py-0.5 text-xs">
+                  src/config.ts
+                </code>
+                . Este aviso desaparece solo.
+              </p>
+            </div>
+          )
+        }
+
+        {
+          formConfigured && (
+            <p class="text-night-500 dark:text-cream-300 mt-4 text-sm">
+              ¿No carga el formulario?{' '}
+              <a
+                href={CONTACT.speakerFormUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-underline font-medium"
+              >
+                Ábrelo en una pestaña nueva
+              </a>
+              .
+            </p>
+          )
+        }
+      </div>
+
+      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
+      <div class="lg:col-span-2">
+        <h2 class="text-2xl font-bold tracking-tight">Qué buscamos</h2>
+
+        <ul class="mt-6 space-y-5">
+          {
+            speakerNotes.map((note) => (
+              <li class="flex gap-3">
+                <Icon
+                  name={note.icon}
+                  class="text-brand-600 dark:text-brand-400 mt-0.5 h-5 w-5 shrink-0"
+                  aria-hidden="true"
+                />
+                <div>
+                  <h3 class="font-bold">{note.title}</h3>
+                  <p class="text-night-600 dark:text-cream-300 mt-1 text-sm leading-relaxed">
+                    {note.body}
+                  </p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="rule mt-10 pt-6">
+          <h3 class="font-bold">Para todo lo demás</h3>
+          <p class="text-night-600 dark:text-cream-300 mt-2 text-sm">
+            El formulario es solo para propuestas de charla. Escríbenos por correo si:
+          </p>
+          <ul class="text-night-600 dark:text-cream-300 mt-3 space-y-1.5 text-sm">
+            {
+              otherReasons.map((reason) => (
+                <li class="flex gap-2">
+                  <span class="text-brand-500" aria-hidden="true">
+                    ·
+                  </span>
+                  {reason}
+                </li>
+              ))
+            }
+          </ul>
+
+          {
+            CONTACT.email && (
+              <a
+                href={`mailto:${CONTACT.email}`}
+                class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 mt-5 flex items-center justify-center gap-2 px-6 py-3.5 transition-colors"
+              >
+                <Icon name="lucide:mail" class="h-4 w-4" aria-hidden="true" />
+                {CONTACT.email}
+              </a>
+            )
+          }
+
+          <p class="text-night-700 dark:text-cream-200 mt-5 text-sm font-medium">
+            También estamos en
+          </p>
+          <SocialLinks class="mt-1 -ml-2" />
+          <p class="text-night-500 dark:text-cream-300 mt-3 text-sm">{SITE.country}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

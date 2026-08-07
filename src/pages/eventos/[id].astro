@@ -1,0 +1,263 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TalkList from '../../components/TalkList.astro';
+import PhotoGallery from '../../components/PhotoGallery.astro';
+import Tabs, { type Tab } from '../../components/Tabs.astro';
+import { CONTACT, url } from '../../config';
+import { getAllEvents, getUpcomingEvents } from '../../lib/events';
+import { getCoverPhoto, getEventPhotos } from '../../lib/photos';
+import { formatDate, formatTimeRange, toISODate, capitalize } from '../../lib/format';
+
+export const getStaticPaths = (async () => {
+  const events = await getAllEvents();
+  return events.map((event) => ({ params: { id: event.id }, props: { event } }));
+}) satisfies GetStaticPaths;
+
+const { event } = Astro.props;
+const { data } = event;
+const { Content } = await render(event);
+
+const upcoming = await getUpcomingEvents();
+const isUpcoming = upcoming.some((candidate) => candidate.id === event.id);
+
+// This page is the single home for everything about the event: programme,
+// slides and photos all live here rather than on a separate album page.
+const photos = getEventPhotos(event);
+
+// A dedicated `cover` wins, but a past event can lead with a photo from its own
+// album instead — no second copy of the same image in the repo.
+const headerImage = data.cover ?? getCoverPhoto(event)?.image;
+
+// Empty sections are dropped rather than shown as a dead tab, so an event with
+// no photos yet simply has fewer tabs.
+const tabs: Tab[] = [
+  { id: 'descripcion', label: 'Descripción' },
+  data.talks.length > 0 && {
+    id: 'presentaciones',
+    label: isUpcoming ? 'Programa' : 'Presentaciones',
+    count: data.talks.length,
+  },
+  photos.length > 0 && { id: 'fotos', label: 'Galería', count: photos.length },
+].filter(Boolean) as Tab[];
+
+// Rich result for search engines — helps the event surface in Google.
+const eventSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Event',
+  name: data.title,
+  startDate: toISODate(data.date),
+  ...(data.endDate && { endDate: toISODate(data.endDate) }),
+  eventAttendanceMode:
+    data.mode === 'online'
+      ? 'https://schema.org/OnlineEventAttendanceMode'
+      : data.mode === 'híbrido'
+        ? 'https://schema.org/MixedEventAttendanceMode'
+        : 'https://schema.org/OfflineEventAttendanceMode',
+  eventStatus: 'https://schema.org/EventScheduled',
+  description: data.summary,
+  ...(data.venue && {
+    location: {
+      '@type': 'Place',
+      name: data.venue,
+      address: {
+        '@type': 'PostalAddress',
+        ...(data.address && { streetAddress: data.address }),
+        addressLocality: data.city,
+        addressCountry: 'CL',
+      },
+    },
+  }),
+  organizer: { '@type': 'Organization', name: 'AI AWS UG Chile' },
+};
+---
+
+<BaseLayout title={data.title} description={data.summary}>
+  <script type="application/ld+json" is:inline set:html={JSON.stringify(eventSchema)} />
+
+  <article>
+    {/* ── Header ─────────────────────────────────────────────────────────── */}
+    <header class="mx-auto max-w-5xl px-5 pt-12 pb-10 sm:px-8 sm:pt-16">
+      <a
+        href={url('/eventos')}
+        class="label text-night-500 hover:text-brand-700 dark:hover:text-brand-400 transition-colors"
+      >
+        <span aria-hidden="true">←</span> Todos los eventos
+      </a>
+
+      <p class="label text-brand-700 dark:text-brand-400 mt-8">
+        {isUpcoming ? 'Próximo' : 'Finalizado'} · {capitalize(data.mode)}
+      </p>
+
+      <h1 class="text-title mt-4 max-w-3xl font-bold text-balance">{data.title}</h1>
+
+      <p
+        class="text-night-600 dark:text-cream-300 mt-6 max-w-2xl text-lg leading-relaxed"
+      >
+        {data.summary}
+      </p>
+
+      <dl class="rule mt-10 grid gap-x-10 gap-y-5 pt-6 sm:grid-cols-3">
+        <div>
+          <dt class="label text-night-500">Fecha</dt>
+          <dd class="mt-1.5 font-semibold">
+            <time datetime={toISODate(data.date)}
+              >{capitalize(formatDate(data.date))}</time
+            >
+          </dd>
+        </div>
+        <div>
+          <dt class="label text-night-500">Hora</dt>
+          <dd class="mt-1.5 font-semibold">{formatTimeRange(data.date, data.endDate)}</dd>
+        </div>
+        <div>
+          <dt class="label text-night-500">Lugar</dt>
+          <dd class="mt-1.5 font-semibold">
+            {data.venue ?? data.city}
+            {
+              data.address && (
+                <span class="text-night-600 dark:text-cream-300 block font-normal">
+                  {data.address}
+                </span>
+              )
+            }
+          </dd>
+        </div>
+      </dl>
+
+      <div class="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
+        {
+          data.meetupUrl && (
+            <a
+              href={data.meetupUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+            >
+              {isUpcoming ? 'Reservar cupo en Meetup' : 'Ver en Meetup'}
+            </a>
+          )
+        }
+        {
+          data.recordingUrl && (
+            <a
+              href={data.recordingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="label text-brand-700 dark:text-brand-400 hover:underline"
+            >
+              Ver grabación <span aria-hidden="true">→</span>
+            </a>
+          )
+        }
+        {
+          /* No "ver fotos" link here: the Galería tab is a few pixels below and
+            already carries the count. */
+        }
+      </div>
+    </header>
+
+    {
+      headerImage && (
+        /* 16:9 rather than a wider band: a group photo cropped to 21:9 loses
+           the people crouching in the front row. */
+        <div class="mx-auto max-w-5xl px-5 sm:px-8">
+          <Image
+            src={headerImage}
+            alt={data.coverAlt ?? `Fotografía del evento ${data.title}`}
+            widths={[900, 1600]}
+            sizes="(min-width: 64rem) 64rem, 100vw"
+            class="aspect-video w-full object-cover"
+            loading="eager"
+          />
+        </div>
+      )
+    }
+
+    {/* ── Descripción | Presentaciones | Galería ─────────────────────────── */}
+    <div class="mx-auto max-w-5xl px-5 py-12 sm:px-8 sm:py-14">
+      <Tabs tabs={tabs} label={`Contenido de ${data.title}`}>
+        <div slot="descripcion">
+          <div
+            class="prose prose-slate dark:prose-invert prose-headings:prose-a:text-brand-600 dark:prose-a:text-brand-400 max-w-3xl"
+          >
+            <Content />
+          </div>
+        </div>
+
+        {
+          data.talks.length > 0 && (
+            <div slot="presentaciones" class="max-w-3xl">
+              {!isUpcoming && (
+                <p class="text-night-600 dark:text-cream-300 mb-6">
+                  Descarga las slides de cada charla.
+                </p>
+              )}
+              <TalkList talks={data.talks} />
+            </div>
+          )
+        }
+
+        {
+          photos.length > 0 && (
+            <div slot="fotos">
+              {data.photosUrl && (
+                <a
+                  href={data.photosUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="label text-night-700 decoration-brand-500/50 hover:decoration-brand-500 dark:text-cream-200 mb-6 inline-block underline underline-offset-[6px] transition-colors"
+                >
+                  Ver álbum completo
+                </a>
+              )}
+
+              <PhotoGallery photos={photos} eventTitle={data.title} />
+
+              <p class="text-night-500 dark:text-cream-300 mt-10 text-sm">
+                ¿Apareces en una foto y prefieres que la bajemos? Escríbenos y la
+                quitamos, sin preguntas.{' '}
+                <a href={`mailto:${CONTACT.email}`} class="link-underline font-medium">
+                  Escríbenos
+                </a>
+                .
+              </p>
+            </div>
+          )
+        }
+      </Tabs>
+    </div>
+
+    {
+      data.sponsors.length > 0 && (
+        <section class="border-cream-200 dark:border-night-700 border-t">
+          <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4 py-10 sm:px-8">
+            <h2 class="text-night-500 dark:text-cream-300 text-sm font-medium">
+              Con el apoyo de
+            </h2>
+            <ul class="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+              {data.sponsors.map((sponsor) => (
+                <li class="text-lg font-bold">
+                  {sponsor.url ? (
+                    <a
+                      href={sponsor.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+                    >
+                      {sponsor.name}
+                    </a>
+                  ) : (
+                    sponsor.name
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )
+    }
+  </article>
+</BaseLayout>

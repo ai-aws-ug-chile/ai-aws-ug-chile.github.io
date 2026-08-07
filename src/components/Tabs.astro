@@ -1,0 +1,130 @@
+---
+export type Tab = {
+  /** Also the URL hash that deep-links to this tab, e.g. "fotos". */
+  id: string;
+  label: string;
+  /** Optional count shown next to the label, e.g. 49 photos. */
+  count?: number;
+};
+
+interface Props {
+  tabs: Tab[];
+  /** Describes the tab set for screen readers. */
+  label: string;
+  /** Tab id to open with. Defaults to the first. A URL hash still wins. */
+  defaultTab?: string;
+}
+
+const { tabs, label, defaultTab } = Astro.props;
+
+const activeIndex = Math.max(
+  0,
+  tabs.findIndex((tab) => tab.id === defaultTab),
+);
+---
+
+<div data-tabs data-default={tabs[activeIndex]?.id}>
+  <div class="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
+    <div
+      role="tablist"
+      aria-label={label}
+      class="border-cream-300 dark:border-night-700 flex min-w-max gap-8 border-b"
+    >
+      {
+        tabs.map((tab, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${tab.id}`}
+            aria-controls={`panel-${tab.id}`}
+            aria-selected={index === activeIndex ? 'true' : 'false'}
+            tabindex={index === activeIndex ? 0 : -1}
+            data-tab={tab.id}
+            class="label text-night-500 hover:text-night-900 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:hover:text-cream-50 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400 -mb-px border-b-2 border-transparent pt-1 pb-3.5 whitespace-nowrap transition-colors"
+          >
+            {tab.label}
+            {tab.count !== undefined && (
+              <span class="text-night-500/70 ml-1.5">{tab.count}</span>
+            )}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  {
+    tabs.map((tab) => (
+      <section
+        role="tabpanel"
+        id={`panel-${tab.id}`}
+        aria-labelledby={`tab-${tab.id}`}
+        tabindex="0"
+        data-panel={tab.id}
+        class="pt-8 focus:outline-none"
+      >
+        {/* Visible only without JS, where every panel is shown stacked. */}
+        <h2 class="js-panel-heading text-title font-bold">{tab.label}</h2>
+        <slot name={tab.id} />
+      </section>
+    ))
+  }
+</div>
+
+{
+  /* Runs before the panels paint, so inactive ones hide without a flash.
+    Without JS nothing hides and the page degrades to a stacked layout. */
+}
+<script is:inline>
+  (() => {
+    const root = document.currentScript.previousElementSibling;
+    if (!root?.matches('[data-tabs]')) return;
+
+    root.querySelectorAll('.js-panel-heading').forEach((heading) => {
+      heading.classList.add('sr-only');
+    });
+
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = [...root.querySelectorAll('[role="tabpanel"]')];
+
+    const activate = (id, { focus = false, updateHash = false } = {}) => {
+      const target = tabs.find((tab) => tab.dataset.tab === id);
+      if (!target) return false;
+
+      tabs.forEach((tab) => {
+        const selected = tab === target;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== id;
+      });
+
+      if (focus) target.focus();
+      // replaceState keeps the URL shareable without pushing history entries
+      // or making the browser jump to the anchor.
+      if (updateHash) history.replaceState(null, '', `#${id}`);
+      return true;
+    };
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () =>
+        activate(tab.dataset.tab, { updateHash: true }),
+      );
+      tab.addEventListener('keydown', (event) => {
+        const offset =
+          event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        if (!offset) return;
+        event.preventDefault();
+        const next = tabs[(tabs.indexOf(tab) + offset + tabs.length) % tabs.length];
+        activate(next.dataset.tab, { focus: true, updateHash: true });
+      });
+    });
+
+    // Links like <a href="#fotos"> elsewhere on the page open that tab.
+    window.addEventListener('hashchange', () => {
+      activate(location.hash.slice(1));
+    });
+
+    activate(location.hash.slice(1)) || activate(root.dataset.default);
+  })();
+</script>

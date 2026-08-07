@@ -1,0 +1,238 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import EventEntry from '../components/EventEntry.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import { CONTACT, SITE, url } from '../config';
+import { getBadge } from '../lib/brand';
+import { getUpcomingEvents, getPastEvents, countStats } from '../lib/events';
+import { formatStamp, formatTimeRange, toISODate } from '../lib/format';
+
+// Undefined until someone drops the artwork into src/assets/brand/.
+const badge = getBadge();
+
+const upcoming = await getUpcomingEvents();
+const past = await getPastEvents();
+const stats = await countStats();
+
+// Whichever branch runs below, an event is rendered once on this page — never
+// as a highlight AND again in the list.
+const nextEvent = upcoming.find((event) => event.data.featured) ?? upcoming[0];
+const restUpcoming = upcoming.filter((event) => event.id !== nextEvent?.id);
+const recentPast = past.slice(0, 3);
+
+// "1 encuentro" argues against the group; wait until the numbers speak for it.
+const showStats = stats.events >= 3;
+
+// The value proposition — the only place on the site these live. `nosotros`
+// covers how the group actually runs, which is a different question.
+const pillars = [
+  {
+    title: 'Casos reales y buenas prácticas',
+    body: 'Charlas de gente que construyó algo con IA sobre AWS y cuenta cómo le fue: las decisiones, los costos y lo que haría distinto.',
+  },
+  {
+    title: 'Para todos los niveles',
+    body: 'Builders, developers, estudiantes y profesionales. Da lo mismo si llevas años en esto o si recién estás partiendo.',
+  },
+  {
+    title: 'Gratis y abierto',
+    body: 'Todos nuestros encuentros son sin costo, y las presentaciones y fotos quedan publicadas para quien no pudo asistir.',
+  },
+];
+---
+
+<BaseLayout>
+  <div class="mx-auto max-w-5xl px-5 sm:px-8">
+    {/* ── Hero ───────────────────────────────────────────────────────────── */}
+    <section class="pt-12 pb-12 sm:pt-20 sm:pb-20">
+      <p class="label text-night-500">
+        AWS User Group · {SITE.country}
+      </p>
+
+      <div
+        class="mt-8 flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between"
+      >
+        <div class="lg:max-w-[36rem]">
+          <h1 class="text-display font-bold text-balance">
+            Construimos con IA sobre AWS, y lo compartimos.
+          </h1>
+
+          {/* Short by design: the full description belongs on /nosotros, once. */}
+          <p
+            class="text-night-600 dark:text-cream-300 mt-7 max-w-xl text-lg leading-relaxed"
+          >
+            Comunidad abierta para aprender, construir y compartir experiencias sobre
+            inteligencia artificial en AWS. Gratis, presencial y online, desde cualquier
+            parte de {SITE.country}.
+          </p>
+
+          <div class="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
+            {
+              CONTACT.meetup && (
+                <a
+                  href={CONTACT.meetup}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+                >
+                  Únete al grupo
+                </a>
+              )
+            }
+            <a
+              href={url('/eventos')}
+              class="label text-night-700 decoration-brand-500/50 hover:decoration-brand-500 dark:text-cream-200 underline underline-offset-[6px] transition-colors"
+            >
+              Ver eventos <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+
+        {
+          badge && (
+            /* On narrow screens it leads as an emblem above the headline;
+               dangling under the buttons it read as an afterthought. From lg
+               it returns to DOM order, beside the text. */
+            <Image
+              src={badge}
+              alt="Badge de AI AWS UG Chile: un pudú frente a la cordillera"
+              widths={[260, 560]}
+              sizes="(min-width: 1024px) 17rem, 8rem"
+              class="order-first mx-auto w-32 lg:order-none lg:mx-0 lg:w-[17rem] lg:shrink-0"
+              loading="eager"
+            />
+          )
+        }
+      </div>
+
+      {
+        showStats && (
+          <dl class="rule mt-14 flex flex-wrap gap-x-14 gap-y-6 pt-6">
+            {[
+              { value: stats.events, label: 'encuentros' },
+              { value: stats.talks, label: stats.talks === 1 ? 'charla' : 'charlas' },
+              {
+                value: stats.speakers,
+                label: stats.speakers === 1 ? 'speaker' : 'speakers',
+              },
+            ].map((stat) => (
+              <div class="flex items-baseline gap-2.5">
+                <dd class="text-3xl font-bold tracking-tight">{stat.value}</dd>
+                <dt class="label text-night-500">{stat.label}</dt>
+              </div>
+            ))}
+          </dl>
+        )
+      }
+    </section>
+
+    {/* ── Events ─────────────────────────────────────────────────────────── */}
+    {
+      (nextEvent || recentPast.length > 0) && (
+        <section class="pb-10 sm:pb-16">
+          <SectionLabel number="01" href={url('/eventos')} linkLabel="Todos los eventos">
+            {nextEvent ? 'Próximo encuentro' : 'Últimos encuentros'}
+          </SectionLabel>
+
+          <div class="mt-2">
+            {nextEvent ? (
+              <>
+                <article class="entry">
+                  <div class="label text-brand-700 dark:text-brand-400 flex flex-wrap gap-x-5 gap-y-1">
+                    <time datetime={toISODate(nextEvent.data.date)}>
+                      {formatStamp(nextEvent.data.date)}
+                    </time>
+                    <span>
+                      {formatTimeRange(nextEvent.data.date, nextEvent.data.endDate)}
+                    </span>
+                    {nextEvent.data.venue && (
+                      <span class="tracking-normal normal-case">
+                        {nextEvent.data.venue}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 class="text-title mt-4 max-w-3xl font-bold">
+                    <a href={url(`/eventos/${nextEvent.id}`)} class="link-title">
+                      {nextEvent.data.title}
+                    </a>
+                  </h3>
+
+                  <p class="text-night-600 dark:text-cream-300 mt-4 max-w-2xl text-lg leading-relaxed">
+                    {nextEvent.data.summary}
+                  </p>
+
+                  <div class="mt-7 flex flex-wrap items-center gap-x-8 gap-y-4">
+                    {nextEvent.data.meetupUrl && (
+                      <a
+                        href={nextEvent.data.meetupUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+                      >
+                        Reservar cupo en Meetup
+                      </a>
+                    )}
+                    <a
+                      href={url(`/eventos/${nextEvent.id}`)}
+                      class="label text-brand-700 dark:text-brand-400 hover:underline"
+                    >
+                      Ver programa <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                </article>
+
+                {restUpcoming.map((event) => (
+                  <EventEntry event={event} />
+                ))}
+              </>
+            ) : (
+              recentPast.map((event) => <EventEntry event={event} />)
+            )}
+          </div>
+        </section>
+      )
+    }
+
+    {/* ── What we are about ──────────────────────────────────────────────── */}
+    <section class="pb-16 sm:pb-24">
+      <SectionLabel number="02" heading={false}>Qué hacemos</SectionLabel>
+
+      <h2 class="text-title mt-6 max-w-2xl font-bold text-balance">
+        Un lugar para aprender de quienes ya lo intentaron
+      </h2>
+
+      <div class="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-3">
+        {
+          pillars.map((pillar, index) => (
+            <div>
+              <p class="label text-brand-700 dark:text-brand-400">
+                {String(index + 1).padStart(2, '0')}
+              </p>
+              <h3 class="mt-3 text-lg leading-snug font-bold">{pillar.title}</h3>
+              <p class="text-night-600 dark:text-cream-300 mt-2 leading-relaxed">
+                {pillar.body}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="rule mt-14 flex flex-wrap items-center gap-x-10 gap-y-4 pt-6">
+        <a
+          href={url('/call-for-speakers')}
+          class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+        >
+          Propón tu charla
+        </a>
+        <a
+          href={url('/nosotros')}
+          class="label text-night-700 decoration-brand-500/50 hover:decoration-brand-500 dark:text-cream-200 underline underline-offset-[6px] transition-colors"
+        >
+          Conoce al equipo <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

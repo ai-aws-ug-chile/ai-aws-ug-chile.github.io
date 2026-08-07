@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { url } from '../config';
+---
+
+<BaseLayout title="Página no encontrada" noindex>
+  <section class="mx-auto max-w-5xl px-5 py-24 sm:px-8 sm:py-32">
+    <p class="label text-brand-700 dark:text-brand-400">Error 404</p>
+
+    <h1 class="text-title mt-5 max-w-2xl font-bold text-balance">
+      Esta página no existe
+    </h1>
+
+    <p class="text-night-600 dark:text-cream-300 mt-6 max-w-xl text-lg leading-relaxed">
+      Puede que el evento se haya movido o que el enlace esté mal escrito. Prueba desde
+      los eventos o vuelve al inicio.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
+      <a
+        href={url('/')}
+        class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+      >
+        Ir al inicio
+      </a>
+      <a
+        href={url('/eventos')}
+        class="label text-brand-700 dark:text-brand-400 hover:underline"
+      >
+        Ver eventos <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>

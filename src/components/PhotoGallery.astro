@@ -1,0 +1,162 @@
+---
+import { getImage, Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import type { Photo } from '../lib/photos';
+
+interface Props {
+  photos: Photo[];
+  /** Used to build alt text, e.g. "Lanzamiento — foto 3 de 25". */
+  eventTitle: string;
+}
+
+const { photos, eventTitle } = Astro.props;
+
+// Resolved to URLs instead of a second hidden <img> per photo.
+const fullSize = await Promise.all(
+  photos.map((photo) =>
+    getImage({ src: photo.image, widths: [1200, 2000], format: 'webp' }),
+  ),
+);
+---
+
+{
+  /* Masonry via CSS columns: no JS, no measuring, and every photo keeps its
+    own proportions instead of being cropped square. */
+}
+<ul class="columns-2 gap-2.5 sm:columns-3 sm:gap-3.5 lg:columns-4">
+  {
+    photos.map((photo, index) => (
+      <li class="mb-2.5 break-inside-avoid sm:mb-3.5">
+        <button
+          type="button"
+          class="group bg-cream-100 dark:bg-night-800 block w-full overflow-hidden"
+          data-lightbox-index={index}
+          data-full-src={fullSize[index].src}
+          data-full-srcset={fullSize[index].srcSet.attribute}
+        >
+          <span class="sr-only">
+            Ampliar foto {index + 1} de {photos.length}
+          </span>
+          <Image
+            src={photo.image}
+            alt={`${eventTitle} — foto ${index + 1}`}
+            widths={[300, 600]}
+            sizes="(min-width: 1024px) 15rem, (min-width: 640px) 30vw, 45vw"
+            class="w-full transition-opacity duration-300 group-hover:opacity-85"
+            loading={index < 8 ? 'eager' : 'lazy'}
+          />
+        </button>
+      </li>
+    ))
+  }
+</ul>
+
+<dialog
+  id="lightbox"
+  class="bg-night-950/95 fixed inset-0 m-0 h-full max-h-none w-full max-w-none p-0 backdrop:bg-transparent"
+  aria-label="Foto ampliada"
+>
+  <div class="flex h-full flex-col">
+    <div class="flex items-center justify-between px-4 py-3 text-white">
+      <p id="lightbox-counter" class="text-cream-300 text-sm" aria-live="polite"></p>
+      <button
+        type="button"
+        id="lightbox-close"
+        class="p-2 transition-colors hover:bg-white/10"
+      >
+        <span class="sr-only">Cerrar</span>
+        <Icon name="lucide:x" class="h-6 w-6" aria-hidden="true" />
+      </button>
+    </div>
+
+    <div
+      class="relative flex flex-1 items-center justify-center overflow-hidden px-4 pb-6"
+    >
+      <button
+        type="button"
+        id="lightbox-prev"
+        class="bg-night-900/70 absolute left-2 z-10 p-3 text-white transition-colors hover:bg-white/20 sm:left-6"
+      >
+        <span class="sr-only">Foto anterior</span>
+        <Icon name="lucide:chevron-left" class="h-6 w-6" aria-hidden="true" />
+      </button>
+
+      <img
+        id="lightbox-image"
+        alt=""
+        class="max-h-full max-w-full object-contain"
+        sizes="95vw"
+        hidden
+      />
+
+      <button
+        type="button"
+        id="lightbox-next"
+        class="bg-night-900/70 absolute right-2 z-10 p-3 text-white transition-colors hover:bg-white/20 sm:right-6"
+      >
+        <span class="sr-only">Foto siguiente</span>
+        <Icon name="lucide:chevron-right" class="h-6 w-6" aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('lightbox') as HTMLDialogElement | null;
+  const image = document.getElementById('lightbox-image') as HTMLImageElement | null;
+  const counter = document.getElementById('lightbox-counter');
+  const triggers = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-lightbox-index]'),
+  );
+
+  if (dialog && image && triggers.length > 0) {
+    let index = 0;
+
+    // Wraps around, so the arrows never dead-end.
+    const show = (next: number): void => {
+      index = (next + triggers.length) % triggers.length;
+      const trigger = triggers[index];
+
+      image.src = trigger.dataset.fullSrc ?? '';
+      image.srcset = trigger.dataset.fullSrcset ?? '';
+      image.alt = `Foto ${index + 1} de ${triggers.length}`;
+      image.hidden = false;
+
+      if (counter) counter.textContent = `${index + 1} / ${triggers.length}`;
+    };
+
+    triggers.forEach((trigger, position) => {
+      trigger.addEventListener('click', () => {
+        show(position);
+        dialog.showModal();
+      });
+    });
+
+    document
+      .getElementById('lightbox-prev')
+      ?.addEventListener('click', () => show(index - 1));
+    document
+      .getElementById('lightbox-next')
+      ?.addEventListener('click', () => show(index + 1));
+    document
+      .getElementById('lightbox-close')
+      ?.addEventListener('click', () => dialog.close());
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') show(index - 1);
+      if (event.key === 'ArrowRight') show(index + 1);
+    });
+
+    // Clicking the backdrop (i.e. outside the image) closes the dialog.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    // Release the decoded image when the dialog closes.
+    dialog.addEventListener('close', () => {
+      image.hidden = true;
+      image.removeAttribute('srcset');
+      image.removeAttribute('src');
+    });
+  }
+</script>

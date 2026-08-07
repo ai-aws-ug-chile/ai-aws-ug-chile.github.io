@@ -1,0 +1,127 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import EventEntry from '../../components/EventEntry.astro';
+import Tabs, { type Tab } from '../../components/Tabs.astro';
+import { CONTACT, url } from '../../config';
+import { getPastEvents, getUpcomingEvents, type Event } from '../../lib/events';
+
+const upcoming = await getUpcomingEvents();
+const past = await getPastEvents();
+
+// Group past events by year so the archive stays readable as it grows.
+const byYear = past.reduce<Map<number, Event[]>>((groups, event) => {
+  const year = event.data.date.getFullYear();
+  groups.set(year, [...(groups.get(year) ?? []), event]);
+  return groups;
+}, new Map());
+
+const years = [...byYear.keys()].sort((a, b) => b - a);
+
+const tabs: Tab[] = [
+  { id: 'proximos', label: 'Próximos', count: upcoming.length },
+  { id: 'pasados', label: 'Pasados', count: past.length },
+];
+
+// Opening on an empty "Próximos" would make the page look dead, so when nothing
+// is scheduled we land on the archive instead — the empty state is one click away.
+const defaultTab = upcoming.length > 0 ? 'proximos' : 'pasados';
+---
+
+<BaseLayout
+  title="Eventos"
+  description="Próximos encuentros y archivo completo de eventos pasados de AI AWS UG Chile, con las presentaciones y fotos de cada uno."
+>
+  <PageHeader
+    eyebrow="Eventos"
+    title="Nuestros encuentros"
+    lead="Todo lo que viene y todo lo que ya pasó. Las presentaciones y las fotos de cada encuentro quedan publicadas en su página."
+  />
+
+  <section class="mx-auto max-w-5xl px-5 pb-16 sm:px-8 sm:pb-20">
+    <Tabs tabs={tabs} label="Próximos y pasados" defaultTab={defaultTab}>
+      {/* ── Upcoming ─────────────────────────────────────────────────────── */}
+      <div slot="proximos">
+        {
+          upcoming.length > 0 ? (
+            /* Entries stack full width — squeezing them into columns would
+               chop every title and summary into a narrow ribbon. The first one
+               drops its rule, since the tab bar above already draws one. */
+            <div class="[&>article:first-child]:border-t-0 [&>article:first-child]:pt-0">
+              {upcoming.map((event) => (
+                <EventEntry event={event} />
+              ))}
+            </div>
+          ) : (
+            /* Same shape as the CTA below: text left, action right. */
+            <div class="flex flex-wrap items-baseline justify-between gap-x-10 gap-y-5 pt-2">
+              <div>
+                <p class="text-xl font-bold">Todavía no hay fecha para el próximo</p>
+                <p class="text-night-600 dark:text-cream-300 mt-2 max-w-lg">
+                  Estamos coordinando el siguiente encuentro. Súmate al grupo de Meetup y
+                  te avisamos apenas esté confirmado.
+                </p>
+              </div>
+              {CONTACT.meetup && (
+                <a
+                  href={CONTACT.meetup}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+                >
+                  Avísame del próximo
+                </a>
+              )}
+            </div>
+          )
+        }
+      </div>
+
+      {/* ── Archive ──────────────────────────────────────────────────────── */}
+      <div slot="pasados">
+        {
+          past.length > 0 ? (
+            <div class="space-y-12">
+              {years.map((year) => (
+                <div>
+                  <h3 class="label text-night-500">{year}</h3>
+                  <div class="mt-2">
+                    {byYear.get(year)!.map((event) => (
+                      <EventEntry event={event} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div class="pt-2">
+              <p class="text-xl font-bold">Todavía no hay encuentros en el archivo</p>
+              <p class="text-night-600 dark:text-cream-300 mt-2 max-w-lg">
+                Acá van a quedar las presentaciones y las fotos de cada encuentro una vez
+                que pase.
+              </p>
+            </div>
+          )
+        }
+      </div>
+    </Tabs>
+  </section>
+
+  {/* ── CTA ──────────────────────────────────────────────────────────────── */}
+  <section class="mx-auto max-w-5xl px-5 pb-20 sm:px-8">
+    <div class="rule flex flex-wrap items-baseline justify-between gap-x-10 gap-y-5 pt-8">
+      <div>
+        <h2 class="text-xl font-bold">¿Quieres presentar en el próximo?</h2>
+        <p class="text-night-600 dark:text-cream-300 mt-2 max-w-lg">
+          Recibimos propuestas de charlas todo el año, de 10 o de 40 minutos.
+        </p>
+      </div>
+      <a
+        href={url('/call-for-speakers')}
+        class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+      >
+        Propón una charla
+      </a>
+    </div>
+  </section>
+</BaseLayout>

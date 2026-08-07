@@ -1,0 +1,165 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import PersonCard from '../components/PersonCard.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import { CONTACT } from '../config';
+
+const organizers = (await getCollection('organizers')).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+const current = organizers.filter((person) => person.data.active);
+const alumni = organizers.filter((person) => !person.data.active);
+
+// The group's own words. Edit here to change what the page says about us.
+const about = [
+  'Somos una comunidad de builders, developers, estudiantes y profesionales interesados en aprender, construir y compartir experiencias sobre inteligencia artificial en AWS.',
+  'Queremos crear un espacio abierto para explorar casos reales, buenas prácticas, herramientas y aprendizajes del ecosistema AWS aplicado a AI.',
+];
+
+/*
+ * What actually happens at a meetup. Deliberately practical — the homepage
+ * already covers *why* to come, so repeating the value proposition here would
+ * just be the same three cards twice.
+ */
+const howItWorks = [
+  {
+    title: 'Dos o tres charlas por encuentro',
+    body: 'Ordenadas de menor a mayor nivel, para que quien recién parte entienda las primeras y quien lleva años se quede hasta el final.',
+  },
+  {
+    title: 'La conversación sigue después',
+    body: 'Terminadas las charlas nos quedamos conversando. En la práctica, esa parte suele ser la más útil de la noche.',
+  },
+  {
+    title: 'Todo queda publicado',
+    body: 'Las presentaciones y las fotos de cada encuentro se suben a este sitio, así que no perderse uno no significa perderse el contenido.',
+  },
+  {
+    title: 'Los temas los propone la comunidad',
+    body: 'Las charlas salen de lo que la gente quiere aprender y de quienes se ofrecen a contar lo que construyeron. Cualquiera puede proponer.',
+  },
+];
+---
+
+<BaseLayout
+  title="Nosotros"
+  description="Qué es AI AWS UG Chile, cómo son nuestros encuentros y quiénes están detrás de la comunidad."
+>
+  {
+    /* No `lead` here: the first paragraph below is the answer to the heading,
+      and repeating a shortened version of it above would say it twice. */
+  }
+  <PageHeader eyebrow="Nosotros" title="Quiénes somos" />
+
+  <div class="mx-auto max-w-5xl px-5 sm:px-8">
+    {/* ── Who we are ─────────────────────────────────────────────────────── */}
+    <section class="pb-16 sm:pb-20">
+      <div
+        class="text-night-700 dark:text-cream-200 max-w-3xl space-y-6 text-xl leading-relaxed"
+      >
+        {about.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+
+      {
+        CONTACT.meetup && (
+          <a
+            href={CONTACT.meetup}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 mt-9 inline-block px-6 py-3.5 transition-colors"
+          >
+            Únete en Meetup
+          </a>
+        )
+      }
+    </section>
+
+    {/* ── How a meetup runs ──────────────────────────────────────────────── */}
+    <section class="pb-16 sm:pb-20">
+      <SectionLabel number="01">Cómo es un encuentro</SectionLabel>
+
+      <div class="mt-10 grid gap-x-14 gap-y-10 sm:grid-cols-2">
+        {
+          howItWorks.map((item, index) => (
+            <div>
+              <p class="label text-brand-700 dark:text-brand-400">
+                {String(index + 1).padStart(2, '0')}
+              </p>
+              <h3 class="mt-3 text-lg leading-snug font-bold">{item.title}</h3>
+              <p class="text-night-600 dark:text-cream-300 mt-2 leading-relaxed">
+                {item.body}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    {/* ── Team ───────────────────────────────────────────────────────────── */}
+    <section class="pb-16 sm:pb-24">
+      <SectionLabel number="02">Quiénes están detrás</SectionLabel>
+
+      <p class="text-night-600 dark:text-cream-300 mt-6 max-w-2xl leading-relaxed">
+        El equipo que organiza los encuentros, consigue las salas y persigue a los
+        speakers hasta que mandan sus slides.
+      </p>
+
+      {
+        current.length > 0 ? (
+          <div class="rule mt-8 grid gap-x-10 gap-y-12 pt-10 sm:grid-cols-2 lg:grid-cols-3">
+            {current.map((person) => (
+              <PersonCard person={person} />
+            ))}
+          </div>
+        ) : (
+          <p class="text-night-600 dark:text-cream-300 mt-8">
+            Estamos armando el equipo.
+          </p>
+        )
+      }
+
+      {
+        /* Shown whether or not there is a team — the invitation to help should
+          not disappear the moment the group has organizers. */
+      }
+      <div
+        class="rule mt-12 flex flex-wrap items-baseline justify-between gap-x-10 gap-y-5 pt-8"
+      >
+        <div>
+          <h3 class="text-xl font-bold">¿Quieres ayudar a organizar?</h3>
+          <p class="text-night-600 dark:text-cream-300 mt-2 max-w-lg">
+            Siempre falta gente para coordinar encuentros, conseguir espacios, difundir y
+            sacar fotos. No hace falta experiencia previa ni vivir en Santiago.
+          </p>
+        </div>
+        <a
+          href={`mailto:${CONTACT.email}`}
+          class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
+        >
+          Escríbenos
+        </a>
+      </div>
+
+      {
+        alumni.length > 0 && (
+          <div class="mt-14">
+            <h3 class="label text-night-500">Organizadores anteriores</h3>
+            <p class="text-night-600 dark:text-cream-300 mt-3">
+              Gente que puso el hombro para que esto existiera. Gracias.
+            </p>
+            <ul class="text-night-600 dark:text-cream-300 mt-3 flex flex-wrap gap-x-2 gap-y-1">
+              {alumni.map((person, index) => (
+                <li>
+                  {person.data.name}
+                  {index < alumni.length - 1 && <span aria-hidden="true"> ·</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+    </section>
+  </div>
+</BaseLayout>
