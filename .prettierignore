@@ -1,0 +1,8 @@
+dist
+node_modules
+pnpm-lock.yaml
+.astro
+
+# Content is authored by organisers, not developers. Reformatting their YAML
+# into folded scalars makes diffs unreadable for the people who write it.
+src/content
