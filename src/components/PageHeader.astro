@@ -1,0 +1,26 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+}
+
+const { eyebrow, title, lead } = Astro.props;
+---
+
+{/* No tinted band behind the title — the rule and the type scale do the work. */}
+<header class="mx-auto max-w-5xl px-5 pt-14 pb-10 sm:px-8 sm:pt-20 sm:pb-12">
+  {eyebrow && <p class="label text-night-500">{eyebrow}</p>}
+
+  <h1 class="text-title mt-5 max-w-3xl font-bold text-balance">{title}</h1>
+
+  {
+    lead && (
+      <p class="text-night-600 dark:text-cream-300 mt-6 max-w-2xl text-lg leading-relaxed">
+        {lead}
+      </p>
+    )
+  }
+
+  <slot />
+</header>

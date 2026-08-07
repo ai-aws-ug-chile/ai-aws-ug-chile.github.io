@@ -1,0 +1,65 @@
+---
+import { CONTACT, SITE, url } from '../config';
+import SocialLinks from './SocialLinks.astro';
+import Logo from './Logo.astro';
+
+const year = new Date().getFullYear();
+
+// No nav column: the sticky header already holds the same links.
+---
+
+<footer class="border-cream-300 dark:border-night-700 mt-auto border-t">
+  <div class="mx-auto max-w-5xl px-5 py-12 sm:px-8">
+    <div class="flex flex-wrap items-start justify-between gap-x-10 gap-y-10">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <Logo class="h-8 w-8" />
+          <span class="text-[0.9rem] font-bold tracking-[0.1em] uppercase">
+            AI AWS UG <span class="text-brand-700 dark:text-brand-400">Chile</span>
+          </span>
+        </div>
+        <p class="label text-night-500 mt-4">
+          {SITE.country} · Gratis y abierto
+        </p>
+        <SocialLinks class="mt-3 -ml-2" />
+      </div>
+
+      <div>
+        <h2 class="label text-night-500">Participa</h2>
+        <ul class="mt-4 space-y-2.5">
+          {
+            CONTACT.meetup && (
+              <li>
+                <a
+                  href={CONTACT.meetup}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="link-title"
+                >
+                  Únete en Meetup
+                </a>
+              </li>
+            )
+          }
+          <li>
+            <a href={url('/call-for-speakers')} class="link-title">Propón una charla</a>
+          </li>
+          {
+            CONTACT.email && (
+              <li>
+                <a href={`mailto:${CONTACT.email}`} class="link-title">
+                  {CONTACT.email}
+                </a>
+              </li>
+            )
+          }
+        </ul>
+      </div>
+    </div>
+
+    <p class="label text-night-500 mt-14">
+      © {year}
+      {SITE.name} · Contenido bajo CC BY 4.0
+    </p>
+  </div>
+</footer>

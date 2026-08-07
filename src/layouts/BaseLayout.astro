@@ -1,0 +1,88 @@
+---
+import '../styles/global.css';
+import { SITE, url } from '../config';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Absolute or site-relative URL for social previews. */
+  image?: string;
+  /** Set on pages that should not be indexed (e.g. thank-you pages). */
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = SITE.description,
+  image = url('/og.png'),
+  noindex = false,
+} = Astro.props;
+
+// Home shows the bare brand; inner pages get "Page — Brand".
+const pageTitle = title
+  ? `${title} — ${SITE.shortName}`
+  : `${SITE.name} — ${SITE.tagline}`;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const socialImage = new URL(image, Astro.site);
+---
+
+<!doctype html>
+<html lang="es-CL" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+    <link rel="sitemap" href={url('/sitemap-index.xml')} />
+    <link rel="canonical" href={canonical} />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:locale" content="es_CL" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {
+      /* Fonts are bundled from node_modules — no third-party request, so
+        visitors are not announced to a font CDN just for loading the page. */
+    }
+
+    {/* Applies the saved theme before first paint so there is no flash. */}
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+
+  <body class="flex min-h-screen flex-col">
+    <a
+      href="#main"
+      class="bg-brand-600 sr-only px-4 py-2 font-medium text-white focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50"
+    >
+      Saltar al contenido
+    </a>
+
+    <Header />
+
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+
+    <Footer />
+  </body>
+</html>

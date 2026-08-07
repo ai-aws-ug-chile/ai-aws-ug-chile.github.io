@@ -1,0 +1,103 @@
+---
+import { Icon } from 'astro-icon/components';
+import { NAV, SITE, url } from '../config';
+import ThemeToggle from './ThemeToggle.astro';
+import Logo from './Logo.astro';
+
+// Normalised so "/eventos/foo" still highlights the "Eventos" item.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const current = Astro.url.pathname.replace(base, '').replace(/\/$/, '') || '/';
+
+const isActive = (href: string): boolean =>
+  href === '/' ? current === '/' : current.startsWith(href);
+---
+
+<header
+  class="border-cream-300 bg-cream-50/90 dark:border-night-700 dark:bg-night-950/90 sticky top-0 z-40 border-b backdrop-blur-sm"
+>
+  <div
+    class="mx-auto flex max-w-5xl items-center justify-between gap-6 px-5 py-3.5 sm:px-8"
+  >
+    <a
+      href={url('/')}
+      class="flex items-center gap-2.5"
+      aria-label={`${SITE.name} — inicio`}
+    >
+      <Logo class="h-8 w-8 shrink-0" />
+      <span class="text-[0.9rem] font-bold tracking-[0.1em] uppercase">
+        AI AWS UG <span class="text-brand-700 dark:text-brand-400">Chile</span>
+      </span>
+    </a>
+
+    <div class="flex items-center gap-6">
+      <nav class="hidden items-center gap-6 md:flex" aria-label="Principal">
+        {
+          NAV.map((item) => (
+            <a
+              href={url(item.href)}
+              aria-current={isActive(item.href) ? 'page' : undefined}
+              class:list={[
+                'label transition-colors',
+                isActive(item.href)
+                  ? 'text-brand-700 dark:text-brand-400'
+                  : 'text-night-600 hover:text-night-900 dark:text-cream-300 dark:hover:text-cream-50',
+              ]}
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </nav>
+
+      <div class="flex items-center gap-1">
+        <ThemeToggle />
+
+        <button
+          type="button"
+          id="menu-toggle"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          class="text-night-600 hover:text-night-900 dark:text-cream-300 dark:hover:text-cream-50 p-2 transition-colors md:hidden"
+        >
+          <span class="sr-only">Abrir menú</span>
+          <Icon name="lucide:menu" class="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav
+    id="mobile-menu"
+    hidden
+    aria-label="Principal (móvil)"
+    class="border-cream-300 dark:border-night-700 border-t px-5 pt-2 pb-4 md:hidden"
+  >
+    {
+      NAV.map((item) => (
+        <a
+          href={url(item.href)}
+          aria-current={isActive(item.href) ? 'page' : undefined}
+          class:list={[
+            'label block py-3',
+            isActive(item.href)
+              ? 'text-brand-700 dark:text-brand-400'
+              : 'text-night-600 dark:text-cream-300',
+          ]}
+        >
+          {item.label}
+        </a>
+      ))
+    }
+  </nav>
+</header>
+
+<script>
+  const toggle = document.getElementById('menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    menu?.toggleAttribute('hidden', open);
+  });
+</script>

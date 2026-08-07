@@ -1,0 +1,134 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* Self-hosted: no request leaves the visitor's browser for a font. */
+@import '@fontsource-variable/source-sans-3';
+@import '@fontsource-variable/jetbrains-mono';
+
+/* Dark mode is driven by a `.dark` class on <html>, set by the inline theme
+   script in BaseLayout so there is no flash of the wrong theme on load. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ───────────────────────────────────────────────────────────────────────
+     Palette sampled from the community badge: a pudú standing against the
+     cordillera, framed in violet on deep navy.
+
+       night — the badge background, and the ink of the light theme
+       brand — the violet hexagon frame; the single accent, used sparingly
+       fawn  — the pudú's coat; rare, for warmth
+       cream — the warm paper the whole light theme sits on
+     ─────────────────────────────────────────────────────────────────────── */
+  --color-night-950: #10142a;
+  --color-night-900: #171c36;
+  --color-night-800: #1e2440;
+  --color-night-700: #2a3157;
+  --color-night-600: #3f4870;
+  --color-night-500: #6b74a0;
+
+  --color-brand-300: #c9b6fb;
+  --color-brand-400: #ac8df7;
+  --color-brand-500: #9269f2;
+  --color-brand-600: #7c4fe6;
+  --color-brand-700: #6238c4;
+
+  --color-fawn-300: #f2cd9b;
+  --color-fawn-400: #e5a85f;
+  --color-fawn-500: #d48b36;
+  --color-fawn-600: #b3702a;
+
+  --color-cream-50: #fbf8f2;
+  --color-cream-100: #f4ede0;
+  --color-cream-200: #e6dcca;
+  --color-cream-300: #d4c6ac;
+
+  /* Source Sans 3 is the closest freely licensed relative to Amazon Ember, so
+     the site sits alongside the group's promo material without pretending to
+     be it. JetBrains Mono carries dates, levels and section labels. */
+  --font-sans: 'Source Sans 3 Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  /* Editorial display sizes: fluid, and larger than UI type would ever go. */
+  --text-display: clamp(2.25rem, 1.5rem + 3.4vw, 4.25rem);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.035em;
+
+  --text-title: clamp(1.75rem, 1.2rem + 2.2vw, 3rem);
+  --text-title--line-height: 1.05;
+  --text-title--letter-spacing: -0.02em;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Offset anchor targets so a sticky header never covers the heading. */
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    /* Warm paper rather than pure white — it comes from the badge's light
+       variant, and keeps long reading from glaring. */
+    @apply bg-cream-50 text-night-900 antialiased;
+    @apply dark:bg-night-950 dark:text-cream-100;
+    font-synthesis-weight: none;
+  }
+
+  ::selection {
+    @apply bg-brand-500/25;
+  }
+
+  :focus-visible {
+    @apply outline-brand-500 outline-2 outline-offset-2;
+  }
+
+  /* Respect users who ask the OS to reduce motion. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * Editorial primitives. The layout is carried by rules, labels and space
+   * rather than by cards and shadows — no rounded boxes, no elevation.
+   */
+
+  /** Small caps-ish metadata: dates, venues, levels, section numbers. */
+  .label {
+    @apply font-mono text-xs tracking-[0.14em] uppercase;
+  }
+
+  /** Hairline used to separate entries and sections. */
+  .rule {
+    @apply border-cream-300 dark:border-night-700 border-t;
+  }
+
+  /** A block that reads as an entry in a printed programme, not a card. */
+  .entry {
+    @apply border-cream-300 dark:border-night-700 border-t py-8;
+  }
+
+  .link-underline {
+    @apply decoration-brand-500/40 underline underline-offset-4;
+    @apply hover:decoration-brand-500 transition-colors;
+  }
+
+  /**
+   * Text link that reveals its underline on hover — used for titles inside
+   * entries, where a permanent underline would fight the typography.
+   */
+  .link-title {
+    @apply decoration-brand-500/60 underline-offset-[6px] transition-colors;
+    @apply hover:text-brand-700 dark:hover:text-brand-400 hover:underline;
+  }
+}

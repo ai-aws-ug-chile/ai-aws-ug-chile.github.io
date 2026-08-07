@@ -1,0 +1,45 @@
+---
+import { Icon } from 'astro-icon/components';
+import { CONTACT } from '../config';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+
+// Only channels with a value in config.ts are rendered — emptying a URL there
+// removes it from the whole site. Brand marks come from Simple Icons; the
+// generic mail glyph from Lucide.
+const channels = [
+  { icon: 'simple-icons:meetup', label: 'Meetup', href: CONTACT.meetup },
+  { icon: 'simple-icons:linkedin', label: 'LinkedIn', href: CONTACT.linkedin },
+  { icon: 'simple-icons:github', label: 'GitHub', href: CONTACT.github },
+  { icon: 'simple-icons:youtube', label: 'YouTube', href: CONTACT.youtube },
+  { icon: 'simple-icons:instagram', label: 'Instagram', href: CONTACT.instagram },
+  {
+    icon: 'lucide:mail',
+    label: 'Email',
+    href: CONTACT.email ? `mailto:${CONTACT.email}` : '',
+    internal: true,
+  },
+].filter((channel) => channel.href);
+---
+
+<ul class:list={['flex flex-wrap items-center gap-1', className]}>
+  {
+    channels.map((channel) => (
+      <li>
+        <a
+          href={channel.href}
+          target={channel.internal ? undefined : '_blank'}
+          rel={channel.internal ? undefined : 'noopener noreferrer'}
+          class="text-night-500 hover:bg-cream-100 hover:text-brand-600 dark:text-cream-300 dark:hover:bg-night-800 dark:hover:text-brand-400 flex h-10 w-10 items-center justify-center transition-colors"
+        >
+          <span class="sr-only">{channel.label}</span>
+          <Icon name={channel.icon} class="h-5 w-5" aria-hidden="true" />
+        </a>
+      </li>
+    ))
+  }
+</ul>
