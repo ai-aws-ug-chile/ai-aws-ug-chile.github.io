@@ -218,9 +218,10 @@ se distingue a 36 píxeles. Si cambia la marca, hay que tocar esos dos archivos.
 
 ### El call for speakers
 
-El Google Form embebido es **solo para propuestas de charla**. Todo lo demás
-—prestar una sala, ayudar a organizar, cualquier duda— va al correo, que aparece
-en el encabezado de esa página y en el footer de todo el sitio.
+El Google Form embebido es **solo para propuestas de charla**. Quien quiera
+ayudar a organizar tiene su propio formulario en `/voluntarios`. Todo lo demás
+—prestar una sala, cualquier duda— va al correo, que aparece en el encabezado de
+esa página y en el footer de todo el sitio.
 
 Para reconectarlo si cambian de formulario:
 
@@ -232,6 +233,9 @@ Para reconectarlo si cambian de formulario:
 
 Mientras no esté configurado, la página muestra estas instrucciones en vez del
 formulario.
+
+El formulario de voluntariado se reconecta igual, con `volunteerFormEmbedUrl`,
+`volunteerFormUrl` y `volunteerFormHeight`.
 
 ---
 
@@ -320,6 +324,7 @@ Las URLs que genera:
 /eventos                       Pestañas: Próximos | Pasados
 /eventos/<evento>              Pestañas: Descripción | Presentaciones | Galería
 /call-for-speakers             Propón una charla (+ correo para lo demás)
+/voluntarios                   Súmate a organizar
 ```
 
 ---

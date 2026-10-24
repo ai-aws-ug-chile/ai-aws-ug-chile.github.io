@@ -1,0 +1,64 @@
+---
+type Props = {
+  /** The `src` of Google's embed snippet (ends in `?embedded=true`). */
+  embedUrl: string;
+  /** The same form without `?embedded=true`, for the open-in-new-tab fallback. */
+  url: string;
+  /** Copy from the `height` of Google's embed snippet, or the form scrolls inside itself. */
+  height: number;
+  title: string;
+};
+
+const { embedUrl, url, height, title } = Astro.props;
+
+// The placeholder id ships with the repo; until it is replaced we show setup
+// instructions instead of an embed that would just render a Google 404.
+const configured = !embedUrl.includes('REPLACE_WITH_YOUR_FORM_ID');
+---
+
+{
+  configured ? (
+    <>
+      <div class="mt-8 overflow-hidden">
+        <iframe
+          src={embedUrl}
+          title={title}
+          height={height}
+          class="w-full border-0"
+          loading="lazy"
+        >
+          Cargando formulario…
+        </iframe>
+      </div>
+      <p class="text-night-500 dark:text-cream-300 mt-4 text-sm">
+        ¿No carga el formulario?{' '}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link-underline font-medium"
+        >
+          Ábrelo en una pestaña nueva
+        </a>
+        .
+      </p>
+    </>
+  ) : (
+    <div class="rule mt-8 pt-6">
+      <p class="font-bold">Falta conectar el formulario</p>
+      <p class="text-night-600 dark:text-cream-300 mt-2 text-sm leading-relaxed">
+        Para activarlo: creen el Google Form, abran{' '}
+        <span class="font-medium">Enviar → &lt;&gt; (insertar HTML)</span>, copien la URL
+        del{' '}
+        <code class="bg-cream-100 dark:bg-night-700 rounded px-1 py-0.5 text-xs">
+          src
+        </code>{' '}
+        y péguenla en{' '}
+        <code class="bg-cream-100 dark:bg-night-700 rounded px-1 py-0.5 text-xs">
+          src/config.ts
+        </code>
+        . Este aviso desaparece solo.
+      </p>
+    </div>
+  )
+}

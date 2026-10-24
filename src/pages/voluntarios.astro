@@ -1,0 +1,108 @@
+---
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import GoogleFormEmbed from '../components/GoogleFormEmbed.astro';
+import { CONTACT, url } from '../config';
+
+// The ways people actually help today, so nobody rules themselves out for lack
+// of a technical skill.
+const helpAreas = [
+  {
+    icon: 'lucide:calendar-check',
+    title: 'El día del encuentro',
+    body: 'Recepción, check-in, montaje y ayudar a que todo parta a la hora.',
+  },
+  {
+    icon: 'lucide:building-2',
+    title: 'Salas y alianzas',
+    body: 'Si tu empresa, universidad u oficina puede prestar un espacio, eso solo ya es un encuentro.',
+  },
+  {
+    icon: 'lucide:map-pin',
+    title: 'Tu región',
+    body: 'Queremos encuentros fuera de Santiago. Si te animas a armar uno, te acompañamos.',
+  },
+  {
+    icon: 'lucide:megaphone',
+    title: 'Difusión, fotos y diseño',
+    body: 'Redes sociales, fotos y video de los encuentros, piezas gráficas y slides.',
+  },
+];
+---
+
+<BaseLayout
+  title="Voluntariado"
+  description="Súmate como voluntario/a de AI AWS UG Chile: logística, salas, encuentros en regiones, difusión y más."
+>
+  <PageHeader
+    eyebrow="Participa"
+    title="Súmate como voluntario/a"
+    lead="La comunidad funciona porque hay gente que pone el hombro. No necesitas experiencia organizando eventos ni ser experto en IA: cada persona aporta según su tiempo."
+  />
+
+  <section class="mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-20">
+    <div class="grid gap-12 lg:grid-cols-5">
+      <div class="lg:col-span-3">
+        <h2 class="text-2xl font-bold tracking-tight">Cuéntanos de ti</h2>
+        <p class="text-night-600 dark:text-cream-300 mt-3">
+          Toma un par de minutos. Te escribimos por correo dentro de la semana para
+          coordinar.
+        </p>
+
+        <GoogleFormEmbed
+          embedUrl={CONTACT.volunteerFormEmbedUrl}
+          url={CONTACT.volunteerFormUrl}
+          height={CONTACT.volunteerFormHeight}
+          title="Formulario para sumarse como voluntario/a en AI AWS UG Chile"
+        />
+      </div>
+
+      <div class="lg:col-span-2">
+        <h2 class="text-2xl font-bold tracking-tight">Dónde hace falta</h2>
+
+        <ul class="mt-6 space-y-5">
+          {
+            helpAreas.map((area) => (
+              <li class="flex gap-3">
+                <Icon
+                  name={area.icon}
+                  class="text-brand-600 dark:text-brand-400 mt-0.5 h-5 w-5 shrink-0"
+                  aria-hidden="true"
+                />
+                <div>
+                  <h3 class="font-bold">{area.title}</h3>
+                  <p class="text-night-600 dark:text-cream-300 mt-1 text-sm leading-relaxed">
+                    {area.body}
+                  </p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+
+        <div class="rule mt-10 pt-6">
+          <h3 class="font-bold">¿Prefieres dar una charla?</h3>
+          <p class="text-night-600 dark:text-cream-300 mt-2 text-sm">
+            Eso va por otro lado:{' '}
+            <a href={url('/call-for-speakers')} class="link-underline font-medium">
+              propón tu charla
+            </a>
+            .
+          </p>
+          {
+            CONTACT.email && (
+              <p class="text-night-600 dark:text-cream-300 mt-3 text-sm">
+                ¿Dudas? Escríbenos a{' '}
+                <a href={`mailto:${CONTACT.email}`} class="link-underline font-medium">
+                  {CONTACT.email}
+                </a>
+                .
+              </p>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

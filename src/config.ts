@@ -25,6 +25,12 @@ export const CONTACT = {
     'https://docs.google.com/forms/d/e/1FAIpQLSeNG5Ikiyb4aL8qdYGv3OUvm3wcRM6RFFnxO7be6_m8KrEIhQ/viewform',
   /** Copy from the `height` of Google's embed snippet, or the form scrolls inside itself. */
   speakerFormHeight: 2013,
+  /** People who want to help run the group, embedded on /voluntarios. */
+  volunteerFormEmbedUrl:
+    'https://docs.google.com/forms/d/e/1FAIpQLSc_S-aCnBZC2n3b4jPrCb4P4aWPC3y5fBBaqE7ldB68rjsG3Q/viewform?embedded=true',
+  volunteerFormUrl:
+    'https://docs.google.com/forms/d/e/1FAIpQLSc_S-aCnBZC2n3b4jPrCb4P4aWPC3y5fBBaqE7ldB68rjsG3Q/viewform',
+  volunteerFormHeight: 2826,
 } as const;
 
 export const NAV = [

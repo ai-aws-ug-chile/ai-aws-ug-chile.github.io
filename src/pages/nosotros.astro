@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
 import PersonCard from '../components/PersonCard.astro';
 import SectionLabel from '../components/SectionLabel.astro';
-import { CONTACT } from '../config';
+import { CONTACT, url } from '../config';
 
 const organizers = (await getCollection('organizers')).sort(
   (a, b) => a.data.order - b.data.order,
@@ -135,10 +135,10 @@ const howItWorks = [
           </p>
         </div>
         <a
-          href={`mailto:${CONTACT.email}`}
+          href={url('/voluntarios')}
           class="label bg-night-900 text-cream-50 hover:bg-brand-700 dark:bg-cream-100 dark:text-night-950 dark:hover:bg-brand-400 px-6 py-3.5 transition-colors"
         >
-          Escríbenos
+          Súmate
         </a>
       </div>
 

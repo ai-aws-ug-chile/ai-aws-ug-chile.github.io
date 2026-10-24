@@ -2,12 +2,9 @@
 import { Icon } from 'astro-icon/components';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
+import GoogleFormEmbed from '../components/GoogleFormEmbed.astro';
 import SocialLinks from '../components/SocialLinks.astro';
-import { CONTACT, SITE } from '../config';
-
-// The placeholder id ships with the repo; until it is replaced we show setup
-// instructions instead of an embed that would just render a Google 404.
-const formConfigured = !CONTACT.speakerFormEmbedUrl.includes('REPLACE_WITH_YOUR_FORM_ID');
+import { CONTACT, SITE, url } from '../config';
 
 // What we are actually looking for, so nobody rules themselves out before asking.
 const speakerNotes = [
@@ -36,7 +33,6 @@ const speakerNotes = [
 // Everything that is not a talk proposal — these go to the inbox, not the form.
 const otherReasons = [
   'Pueden prestarnos una sala, en cualquier ciudad del país',
-  'Quieren ayudar a organizar',
   'Quieren armar un encuentro en su región',
   'Tienen una idea de tema para un próximo encuentro',
   'Cualquier otra duda',
@@ -75,55 +71,12 @@ const otherReasons = [
           dentro de la semana.
         </p>
 
-        {
-          formConfigured ? (
-            <div class="mt-8 overflow-hidden">
-              <iframe
-                src={CONTACT.speakerFormEmbedUrl}
-                title="Formulario para proponer una charla en AI AWS UG Chile"
-                height={CONTACT.speakerFormHeight}
-                class="w-full border-0"
-                loading="lazy"
-              >
-                Cargando formulario…
-              </iframe>
-            </div>
-          ) : (
-            <div class="rule mt-8 pt-6">
-              <p class="font-bold">Falta conectar el formulario</p>
-              <p class="text-night-600 dark:text-cream-300 mt-2 text-sm leading-relaxed">
-                Para activarlo: creen el Google Form, abran{' '}
-                <span class="font-medium">Enviar → &lt;&gt; (insertar HTML)</span>, copien
-                la URL del{' '}
-                <code class="bg-cream-100 dark:bg-night-700 rounded px-1 py-0.5 text-xs">
-                  src
-                </code>{' '}
-                y péguenla en{' '}
-                <code class="bg-cream-100 dark:bg-night-700 rounded px-1 py-0.5 text-xs">
-                  src/config.ts
-                </code>
-                . Este aviso desaparece solo.
-              </p>
-            </div>
-          )
-        }
-
-        {
-          formConfigured && (
-            <p class="text-night-500 dark:text-cream-300 mt-4 text-sm">
-              ¿No carga el formulario?{' '}
-              <a
-                href={CONTACT.speakerFormUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="link-underline font-medium"
-              >
-                Ábrelo en una pestaña nueva
-              </a>
-              .
-            </p>
-          )
-        }
+        <GoogleFormEmbed
+          embedUrl={CONTACT.speakerFormEmbedUrl}
+          url={CONTACT.speakerFormUrl}
+          height={CONTACT.speakerFormHeight}
+          title="Formulario para proponer una charla en AI AWS UG Chile"
+        />
       </div>
 
       {/* ── Sidebar ──────────────────────────────────────────────────────── */}
@@ -167,6 +120,13 @@ const otherReasons = [
               ))
             }
           </ul>
+          <p class="text-night-600 dark:text-cream-300 mt-3 text-sm">
+            ¿Quieres ayudar a organizar?{' '}
+            <a href={url('/voluntarios')} class="link-underline font-medium">
+              Súmate como voluntario/a
+            </a>
+            .
+          </p>
 
           {
             CONTACT.email && (
