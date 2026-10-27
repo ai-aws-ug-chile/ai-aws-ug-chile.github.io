@@ -11,7 +11,12 @@ venue: Oficinas de Buk
 address: Roger de Flor 2775, Torre 3, piso 16
 city: Santiago
 meetupUrl: https://www.meetup.com/ai-aws-ug-chile/events/316621496/
-# TODO: agregar las demos que se presentaron (`talks`) y las fotos si las hay.
+photos: 2026-09-build-night-clerk
+coverPhoto: '01.jpg'
+coverAlt: >-
+  Presentación durante el Build Night Santiago de Clerk y AI AWS UG Chile,
+  en las oficinas de Buk.
+# TODO: agregar las demos que se presentaron (`talks`).
 sponsors:
   - name: Clerk
   - name: Buk
